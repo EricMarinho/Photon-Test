@@ -1,5 +1,6 @@
 using Photon.Pun;
 using Photon.Realtime;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
 {
     //Singleton
     public static MultiplayerController Instance;
+    public Action<bool> _onConnectionResult;
 
     private void Awake()
     {
@@ -18,18 +20,27 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
         {
             Destroy(this);
         }
+        DontDestroyOnLoad(this);
     }
 
-    public void Start()
+    public void Initialize()
     {
         ConnectToServer();
-        JoinLobby();
-        //StartCoroutine(CheckPing());
+    }
+
+    private void ConnectToServer()
+    {
+        PhotonNetwork.ConnectUsingSettings();
     }
 
     public void JoinLobby()
     {
         PhotonNetwork.JoinLobby();
+    }
+
+    public void ChangeNickname(string nickname)
+    {
+        PhotonNetwork.NickName = nickname;
     }
 
     public void CreateRoom(string roomName)
@@ -44,18 +55,19 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinRoom(roomName);
     }
 
-    public void ConnectToServer()
-    {
-        PhotonNetwork.ConnectUsingSettings();
-    }
-
-    private IEnumerator CheckPing()
+    public IEnumerator CheckPing()
     {
         while (true)
         {
             Debug.Log("Ping: " + PhotonNetwork.GetPing());
             yield return new WaitForSeconds(5);
         }
+    }
+
+    private void LateInitialize()
+    {
+        ConnectToServer();
+        JoinLobby();
     }
 
     #region Callbacks
@@ -67,17 +79,26 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
+        _onConnectionResult?.Invoke(true);
         Debug.Log("Connected to Master Server");
     }
 
     public override void OnDisconnected(DisconnectCause cause)
     {
+        _onConnectionResult?.Invoke(false);
         Debug.Log("Disconnected from server for reason: " + cause.ToString());
     }
 
     public override void OnJoinedLobby()
     {
+        _onConnectionResult?.Invoke(true);
         Debug.Log("Joined Lobby");
+    }
+
+    public override void OnLeftLobby()
+    {
+        _onConnectionResult.Invoke(false);
+        Debug.Log("Left Lobby");
     }
 
     public override void OnJoinedRoom()
