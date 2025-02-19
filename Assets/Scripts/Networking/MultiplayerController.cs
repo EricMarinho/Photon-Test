@@ -55,6 +55,15 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinRoom(roomName);
     }
 
+    public void JoinOrCreateRandomRoom()
+    {
+        string roomName = "Room_" + UnityEngine.Random.Range(1, 9999);
+        RoomOptions roomOptions = new RoomOptions();
+        roomOptions.MaxPlayers = 4;
+
+        PhotonNetwork.JoinOrCreateRoom(roomName, roomOptions, null);
+    }
+
     public IEnumerator CheckPing()
     {
         while (true)
