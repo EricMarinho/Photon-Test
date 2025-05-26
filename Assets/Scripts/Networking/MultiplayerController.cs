@@ -2,6 +2,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 
 public class MultiplayerController : MonoBehaviourPunCallbacks
@@ -30,6 +31,7 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
 
     private void ConnectToServer()
     {
+        PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.ConnectUsingSettings();
     }
 
@@ -118,6 +120,7 @@ public class MultiplayerController : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         Debug.Log("Room Created");
+        PhotonNetwork.LoadLevel("GameScene");
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
