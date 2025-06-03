@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
     private bool isGrounded;
 
-    private PhotonView photonView;
+    public PhotonView photonView;
 
     private void Awake()
     {
@@ -24,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
         {
             HandleMovement();
             HandleJump();
+            HandleLookToCamera();
         }
     }
 
@@ -32,7 +33,14 @@ public class PlayerMovement : MonoBehaviour
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
-        rb.MovePosition(transform.position + movement * moveSpeed * Time.deltaTime);
+
+        if (movement.sqrMagnitude > 1f)
+        {
+            movement.Normalize();
+        }
+
+        movement = transform.TransformDirection(movement);
+        rb.MovePosition(rb.position + movement * moveSpeed * Time.deltaTime);
     }
 
     private void HandleJump()
@@ -52,4 +60,17 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void HandleLookToCamera()
+    {
+        if (Camera.main != null)
+        {
+            Vector3 cameraForward = Camera.main.transform.forward;
+            cameraForward.y = 0; // Ignore vertical component
+            if (cameraForward.sqrMagnitude > 0.01f) // Avoid zero vector
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(cameraForward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+            }
+        }
+    }
 }
